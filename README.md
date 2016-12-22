@@ -7,6 +7,8 @@ variables, but the `make` part behind that isn't documented.
 
 It is suitable for executables, libraries, compiled documents,…
 
+An example is given in the [example](./example) folder.
+
 # Features
 
 * Multiple file extension for sources
