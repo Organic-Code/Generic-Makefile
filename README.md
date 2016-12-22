@@ -10,6 +10,7 @@ It is suitable for executables, libraries, compiled documents,…
 # Features
 
 * Multiple file extension for sources
+* Multiple source folder
 * Automatic discovery of source files within the source folder
 * Pre-make, pre-link and post-build hooks with arguments
 * Final build inhibition (ie: build only objects file and not final executable)

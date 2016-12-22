@@ -62,7 +62,7 @@ EXCLUDEDEFILES  =
 BUILDDIR        = bin/
 #Directory for objects file
 OBJDIR          = build/
-#Sources' directory
+#Sources' directories, separated by a space
 SOURCEDIR       = src/
 
 #Name of the output executable
@@ -106,10 +106,18 @@ POST            =\r[ $(GREEN)OK$(RESET) ]
 
 ################################## End of user defined ##################################
 
+
+define uniq
+  $(eval seen :=)
+  $(foreach _,$1,$(if $(filter $_,${seen}),,$(eval seen += $_)))
+  ${seen}
+endef
+
+
 RWILDCARD = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call RWILDCARD,$d/,$2))
 
 OUTFINAL       := $(BUILDDIR)$(OUTNAME)
-SOURCES        := $(filter-out $(EXCLUDEDEFILES),$(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(SOURCEDIR),*.$(fileid))))
+SOURCES        := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(scrdir),*.$(fileid))))))
 OBJECTS         = $(foreach src,$(SOURCES),$(OBJDIR)$(basename $(src)).o)
 VPATH          := $(SOURCEDIR)
 COMPFLAGS      += $(COMPSTANDARD)
@@ -124,13 +132,13 @@ TARGETSTOBUILD := $(words $(OBJECTS))
 BUILTSOFAR     := 1
 
 define draw_half_line
-	for i in `seq 1 $$(($$(tput cols) / 2 - $(1)))`; do $(DISPLAY) '—'; done
+	for i in `seq 1 $$(($$(tput cols) / 2 - $(1))) $(VOIDERROR) || true`; do $(DISPLAY) '—'; done
 endef
 
 define make_line
-	$(call draw_half_line, $$((($(call STRLEN, $(1)) + $(words $(1))) / 2))) $(VOIDERROR) || true # just in case you don't have `tput`
+	$(call draw_half_line, $$((($(call STRLEN, $(1)) + $(words $(1))) / 2)))
 	$(DISPLAY) "$(1) "
-	$(call draw_half_line, $$((($(call STRLEN, $(1)) + $(words $(1) + 1)) / 2))) $(VOIDERROR) || true # just in case you don't have `tput`
+	$(call draw_half_line, $$((($(call STRLEN, $(1)) + $(words $(1) + 1)) / 2)))
 	$(DISPLAY) "\n\n"
 endef
 
@@ -156,7 +164,7 @@ ifeq ($(strip $(OUTNAME)),)
 	@$(DISPLAY) "OUTNAME variable not set !\n"
 	@exit 1
 endif
-ifeq ($(BUILDINGLIB),0)
+ifeq ($(BUILDINGLIB),1)
 	@$(DISPLAY) "ERROR: program built by this makefile isn't an executable\n"
 	@exit 1
 endif
@@ -179,7 +187,7 @@ ifneq ($(strip $(PRELINKMSG)),)
 	@$(DISPLAY) $(PRELINKMSG)
 endif
 ifneq ($(strip $(PRELINKHOOK)),)
-	$(PRELINKHOOK) $(OBJECTS)
+	$(PRELINKHOOK) $(abspath $(OBJECTS))
 endif
 ifeq ($(INHIBITLINKING),0)
 	@$(DISPLAY) "\n$(PRE)Building $(EMPH)$(subst $(CURDIR)/,,$(abspath $(OUTFINAL)))$(RESET) from object files..."
@@ -193,7 +201,7 @@ ifneq ($(strip $(POSTBUILDMSG)),)
 	@$(DISPLAY) $(POSTBUILDMSG)
 endif
 ifneq ($(strip $(POSTBUILDHOOK)),)
-	$(POSTBUILDHOOK) $(OUTFINAL)
+	$(POSTBUILDHOOK) $(abspath $(OUTFINAL))
 endif
 	@$(DISPLAY) "\n"
 
