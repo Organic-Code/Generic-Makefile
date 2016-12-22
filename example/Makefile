@@ -54,8 +54,10 @@ COMPDEBUG       = -g
 COMPFINALIZE    =
 #Extensions for source files, space separated, without the '.' character
 FILEIDENTIFIERS = cxx cpp
+#Files to exclude, space separated. Any file with that name will be ignored
+EXCLUDEDEFILES  = those_files_wont_compile.cxx
 #Files to exclude, space separated. The full path from the Makefile directory is required, without './'
-EXCLUDEDEFILES  = src2/this_file_wont_compile.cxx
+EXCLUDEDSPEC    = src/sayHello.cxx
 
 #--Directories should be empty or end by '/'--
 #Directory for the final executable
@@ -68,7 +70,7 @@ SOURCEDIR       = src/ src2/
 #Name of the output executable
 OUTNAME         = a.out
 #Command to be run before anything is compiled
-PREBUILDHOOK    = 
+PREBUILDHOOK    =
 #Command to be run just before linking obj files together, given all objects files as parameter
 PRELINKHOOK     = f(){ echo "This is a dummy example of inline function"; echo "I got '$$*' as arguments"; } && f
 #Command to be run after a build is completed, given the final binary as parameter
@@ -117,7 +119,8 @@ endef
 RWILDCARD = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call RWILDCARD,$d/,$2))
 
 OUTFINAL       := $(BUILDDIR)$(OUTNAME)
-SOURCES        := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(scrdir),*.$(fileid))))))
+SOURCESNAME    := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(notdir $(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(scrdir),*.$(fileid)))))))
+SOURCES        := $(filter-out $(abspath $(EXCLUDEDSPEC)),$(abspath $(foreach name,$(SOURCESNAME),$(call RWILDCARD,$(scrdir),$(name)))))
 OBJECTS         = $(foreach src,$(SOURCES),$(OBJDIR)$(basename $(src)).o)
 VPATH          := $(SOURCEDIR)
 COMPFLAGS      += $(COMPSTANDARD)

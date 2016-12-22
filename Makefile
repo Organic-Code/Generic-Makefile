@@ -54,8 +54,10 @@ COMPDEBUG       = -g
 COMPFINALIZE    = -shared
 #Extensions for source files, space separated, without the '.' character
 FILEIDENTIFIERS =
+#Files to exclude, space separated. Any file with that name will be ignored
+EXCLUDEDEFILES  = those_files_wont_compile.cxx
 #Files to exclude, space separated. The full path from the Makefile directory is required, without './'
-EXCLUDEDEFILES  =
+EXCLUDEDSPEC    = src/sayHello.cxx
 
 #--Directories should be empty or end by '/'--
 #Directory for the final executable
@@ -117,7 +119,8 @@ endef
 RWILDCARD = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call RWILDCARD,$d/,$2))
 
 OUTFINAL       := $(BUILDDIR)$(OUTNAME)
-SOURCES        := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(scrdir),*.$(fileid))))))
+SOURCESNAME    := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(notdir $(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(scrdir),*.$(fileid)))))))
+SOURCES        := $(filter-out $(abspath $(EXCLUDEDSPEC)),$(abspath $(foreach name,$(SOURCESNAME),$(call RWILDCARD,$(scrdir),$(name)))))
 OBJECTS         = $(foreach src,$(SOURCES),$(OBJDIR)$(basename $(src)).o)
 VPATH          := $(SOURCEDIR)
 COMPFLAGS      += $(COMPSTANDARD)
