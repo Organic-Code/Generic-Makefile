@@ -51,7 +51,7 @@ COMPSTOP2OBJECT = -c
 #Compiler argument for a debug build
 COMPDEBUG       = -g
 #Compiler argument added when mixing all objects files for the final product
-COMPFINAlIZE    = -shared
+COMPFINALIZE    = -shared
 #Extensions for source files, space separated, without the '.' character
 FILEIDENTIFIERS =
 #Files to exclude, space separated. The full path from the Makefile directory is required, without './'
@@ -183,10 +183,10 @@ ifneq ($(strip $(PRELINKHOOK)),)
 endif
 ifeq ($(INHIBITLINKING),0)
 	@$(DISPLAY) "\n$(PRE)Building $(EMPH)$(subst $(CURDIR)/,,$(abspath $(OUTFINAL)))$(RESET) from object files..."
-ifeq ($(strip $(BUILDDIR)),)
+ifeq ($(wildcard $(BUILDDIR)/.),)
 	@$(MKDIR) $(BUILDDIR)
 endif
-	$(COMPILER) $(LIBSDIR) $(LINKS) $(COMPOUTPUTNAME) $(OUTFINAL) $(COMPFINAlIZE) $(OBJECTS)
+	$(COMPILER) $(LIBSDIR) $(LINKS) $(COMPOUTPUTNAME) $(OUTFINAL) $(COMPFINALIZE) $(OBJECTS)
 	@$(DISPLAY) "$(POST)\n\n"
 endif
 ifneq ($(strip $(POSTBUILDMSG)),)
