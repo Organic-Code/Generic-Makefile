@@ -50,14 +50,14 @@ COMPOUTPUTNAME  = -o
 COMPSTOP2OBJECT = -c
 #Compiler argument for a debug build
 COMPDEBUG       = -g
-#Compiler argument added when mixing all objects files for the final product
-COMPFINALIZE    = -shared
+#Compiler argument added when mixing all objects files for the final product (ie: when building a library using GCC, add '-shared' here)
+COMPFINALIZE    =
 #Extensions for source files, space separated, without the '.' character
 FILEIDENTIFIERS =
 #Files to exclude, space separated. Any file with that name will be ignored
-EXCLUDEDEFILES  = those_files_wont_compile.cxx
+EXCLUDEDEFILES  =
 #Files to exclude, space separated. The full path from the Makefile directory is required, without './'
-EXCLUDEDSPEC    = src/sayHello.cxx
+EXCLUDEDSPEC    =
 
 #--Directories should be empty or end by '/'--
 #Directory for the final executable
@@ -119,8 +119,8 @@ endef
 RWILDCARD = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call RWILDCARD,$d/,$2))
 
 OUTFINAL       := $(BUILDDIR)$(OUTNAME)
-SOURCESNAME    := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(notdir $(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(scrdir),*.$(fileid)))))))
-SOURCES        := $(filter-out $(abspath $(EXCLUDEDSPEC)),$(abspath $(foreach name,$(SOURCESNAME),$(call RWILDCARD,$(scrdir),$(name)))))
+SOURCESNAME    := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(notdir $(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(srcdir),*.$(fileid)))))))
+SOURCES        := $(subst $(CURDIR)/,,$(filter-out $(abspath $(EXCLUDEDSPEC)),$(abspath $(foreach name,$(SOURCESNAME),$(foreach srcdir,$(SOURCEDIR),$(call RWILDCARD,$(srcdir),$(name)))))))
 OBJECTS         = $(foreach src,$(SOURCES),$(OBJDIR)$(basename $(src)).o)
 VPATH          := $(SOURCEDIR)
 COMPFLAGS      += $(COMPSTANDARD)
