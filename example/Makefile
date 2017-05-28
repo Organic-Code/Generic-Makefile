@@ -1,6 +1,6 @@
 #########################################################################################
 #                                                                                       #
-# Copyright (C) 2016 LAZARE Lucas (lucas@lazare.fr)                                     #
+# Copyright (C) 2017 LAZARE Lucas (lucas@lazare.fr)                                     #
 #                                                                                       #
 # This software is provided 'as-is', WITHOUT ANY EXPRESS OR IMPLIED WARRANTY.           #
 # In NO EVENT will the authors be held liable for any damages arising from the          #
@@ -50,7 +50,7 @@ COMPOUTPUTNAME  = -o
 COMPSTOP2OBJECT = -c
 #Compiler argument for a debug build
 COMPDEBUG       = -g
-#Compiler argument added when mixing all objects files for the final product
+#Compiler argument added when mixing all objects files for the final product (ie: when building a library using GCC, add '-shared' here)
 COMPFINALIZE    =
 #Extensions for source files, space separated, without the '.' character
 FILEIDENTIFIERS = cxx cpp
@@ -119,8 +119,8 @@ endef
 RWILDCARD = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call RWILDCARD,$d/,$2))
 
 OUTFINAL       := $(BUILDDIR)$(OUTNAME)
-SOURCESNAME    := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(notdir $(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(scrdir),*.$(fileid)))))))
-SOURCES        := $(filter-out $(abspath $(EXCLUDEDSPEC)),$(abspath $(foreach name,$(SOURCESNAME),$(call RWILDCARD,$(scrdir),$(name)))))
+SOURCESNAME    := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(notdir $(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(srcdir),*.$(fileid)))))))
+SOURCES        := $(subst $(CURDIR)/,,$(filter-out $(abspath $(EXCLUDEDSPEC)),$(abspath $(foreach name,$(SOURCESNAME),$(foreach srcdir,$(SOURCEDIR),$(call RWILDCARD,$(srcdir),$(name)))))))
 OBJECTS         = $(foreach src,$(SOURCES),$(OBJDIR)$(basename $(src)).o)
 VPATH          := $(SOURCEDIR)
 COMPFLAGS      += $(COMPSTANDARD)

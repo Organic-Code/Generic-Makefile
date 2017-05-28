@@ -1,6 +1,6 @@
 #########################################################################################
 #                                                                                       #
-# Copyright (C) 2016 LAZARE Lucas (lucas@lazare.fr)                                     #
+# Copyright (C) 2017 LAZARE Lucas (lucas@lazare.fr)                                     #
 #                                                                                       #
 # This software is provided 'as-is', WITHOUT ANY EXPRESS OR IMPLIED WARRANTY.           #
 # In NO EVENT will the authors be held liable for any damages arising from the          #
@@ -29,6 +29,9 @@
 BUILDINGLIB     = 0
 #Set to 1 if you don't want make to link objects file together.
 INHIBITLINKING  = 0
+
+#Debugger's command. The executable will be passed to it when calling 'make debug'
+DEBUGGER        =
 
 #Compiler command
 COMPILER        =
@@ -120,8 +123,9 @@ RWILDCARD = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call RWILDCARD,$d/,$2
 
 OUTFINAL       := $(BUILDDIR)$(OUTNAME)
 SOURCESNAME    := $(call uniq,$(foreach srcdir,$(SOURCEDIR),$(filter-out $(EXCLUDEDEFILES),$(notdir $(foreach fileid, $(FILEIDENTIFIERS),$(call RWILDCARD,$(srcdir),*.$(fileid)))))))
-SOURCES        := $(subst $(CURDIR)/,,$(filter-out $(abspath $(EXCLUDEDSPEC)),$(abspath $(foreach name,$(SOURCESNAME),$(foreach srcdir,$(SOURCEDIR),$(call RWILDCARD,$(srcdir),$(name)))))))
-OBJECTS         = $(foreach src,$(SOURCES),$(OBJDIR)$(basename $(src)).o)
+SOURCES        := $(filter-out $(abspath $(EXCLUDEDSPEC)),$(abspath $(foreach name,$(SOURCESNAME),$(foreach srcdir,$(SOURCEDIR),$(call RWILDCARD,$(srcdir),$(name))))))
+SOURCES        := $(SOURCES:$(CURDIR)/%=%)
+OBJECTS        := $(foreach src,$(SOURCES),$(OBJDIR)$(basename $(src)).o)
 VPATH          := $(SOURCEDIR)
 COMPFLAGS      += $(COMPSTANDARD)
 
@@ -193,7 +197,7 @@ ifneq ($(strip $(PRELINKHOOK)),)
 	$(PRELINKHOOK) $(abspath $(OBJECTS))
 endif
 ifeq ($(INHIBITLINKING),0)
-	@$(DISPLAY) "\n$(PRE)Building $(EMPH)$(subst $(CURDIR)/,,$(abspath $(OUTFINAL)))$(RESET) from object files..."
+	@$(DISPLAY) "\n$(PRE)Building $(EMPH)$(OUTFINAL)$(RESET) from object files..."
 ifeq ($(wildcard $(BUILDDIR)/.),)
 	@$(MKDIR) $(BUILDDIR)
 endif
@@ -226,16 +230,43 @@ debug:
 _debug: COMPFLAGS = $(COMPDEBUG) $(COMPSTANDARD)
 _debug: $(OUTFINAL)
 ifeq ($(strip $(BUILDDIR)),)
-	@$(LEAKCHECKER) ./$(OUTFINAL)
+	@$(DEBUGGER) ./$(OUTFINAL)
 else
-	@$(LEAKCHECKER) $(OUTFINAL)
+	@$(DEBUGGER) $(OUTFINAL)
 endif
 
 .PHONY: clean
 clean:
 	@$(DISPLAY) "$(RESET)Cleaning files and folders...\n"
-	@$(foreach file,$(OBJECTS), test -e $(file) && $(DISPLAY) "\n$(PRE)Removing $(EMPH)$(subst $(CURDIR)/,,$(abspath $(file)))$(RESET)..." && $(RM) $(file) && $(DISPLAY) "$(POST)";) true
-	@$(foreach file,$(OUTFINAL), test -e $(file) && $(DISPLAY) "\n$(PRE)Removing $(EMPH)$(subst $(CURDIR)/,,$(abspath $(file)))$(RESET)..." && $(RM) $(file) && $(DISPLAY) "$(POST)";) true
+	@$(foreach file,$(OBJECTS), test -e $(file) && $(DISPLAY) "\n$(PRE)Removing $(EMPH)$(file)$(RESET)..." && $(RM) $(file) && $(DISPLAY) "$(POST)";) true
+	@$(foreach file,$(OUTFINAL), test -e $(file) && $(DISPLAY) "\n$(PRE)Removing $(EMPH)$(file)$(RESET)..." && $(RM) $(file) && $(DISPLAY) "$(POST)";) true
 	@$(DISPLAY) "\n\nDeleting empty directories..."
 	@$(RMDIR) $(dir $(OBJECTS) $(OUTFINAL)) $(BUILDDIR) $(OBJDIR) $(VOIDECHO) || true
 	@$(DISPLAY) "\nDone\n"
+
+.PHONY: list_include_dirs
+list_include_dirs:
+	@$(DISPLAY) "$(realpath $(INCLUDEDIR))\n"
+
+.PHONY: list_src_dirs
+list_src_dirs:
+	@$(DISPLAY) "$(realpath $(SOURCEDIR))\n"
+
+.PHONY: list_src_files
+list_src_files:
+	@$(DISPLAY) "$(realpath $(SOURCES))\n"
+
+
+.PHONY: human-list_include_dirs
+human-list_include_dirs: INCLUDEDIR := $(realpath $(INCLUDEDIR))
+human-list_include_dirs:
+	@$(DISPLAY) " $(foreach folder,$(INCLUDEDIR),$(folder:$(CURDIR)/%=%)/\n)"
+
+.PHONY: human-list_src_dirs
+human-list_src_dirs: SOURCEDIR := $(realpath $(SOURCEDIR))
+human-list_src_dirs:
+	@$(DISPLAY) " $(foreach folder,$(SOURCEDIR),$(folder:$(CURDIR)/%=%)\n)"
+
+.PHONY: human-list_src_files
+human-list_src_files:
+	@$(DISPLAY) " $(foreach file,$(SOURCES),$(file)\n)"
